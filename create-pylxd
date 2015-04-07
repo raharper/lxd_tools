@@ -1,0 +1,42 @@
+#!/usr/bin/python2
+import sys
+import os
+import json
+import time
+import subprocess
+
+def date():
+    return subprocess.check_output("date -u +%s.%N".split()).strip()
+
+pylxd_path = os.path.join(os.getcwd(), 'pylxd/pylxd')
+sys.path.insert(0, pylxd_path)
+import client
+
+name = sys.argv[1]
+rootfs = os.path.join('/var/lib/lxd/lxc', name, 'rootfs')
+c = client.Client()
+
+
+config = {
+   'name': name,
+   'architecture': 'x86_64',
+   'ephemeral': True,
+   'hostname': name,
+   'profiles': ['default'],
+   'source': {
+        'type': 'none',
+        'path': rootfs,
+   }
+}
+
+print('%s: %s container_init() ->' %(date(), name))
+(s, d) = c.container_init(config)
+print('%s: %s container_init() <-' %(date(), name))
+print('%s: %s c.start() ->' %(date(), name))
+c.start(name)
+while c.running(name) is False:
+    print('%s: %s not running, calling c.start() ->'
+            %(date(), name))
+    c.start(name)
+    time.sleep(0.5)
+print('%s: %s state=running' %(date(), name))

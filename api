@@ -1,0 +1,30 @@
+#!/usr/bin/python
+import json
+import requests
+import sys
+
+host ='http://127.0.0.1:8080'
+op = sys.argv[1].upper()
+api = sys.argv[2]
+
+url = host + api
+
+req = requests.request(op, url)
+'''
+{
+  "status": "Success", 
+  "status_code": 200, 
+  "type": "sync", 
+  "metadata": {
+    "status": {
+      "state": "STOPPED", 
+      "state_code": 1
+    }, 
+    "userdata": "", 
+    "config": [], 
+    "name": "testme", 
+    "profiles": []
+  }
+}
+'''
+print json.dumps(json.loads(req.content), indent=2)

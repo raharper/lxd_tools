@@ -1,0 +1,121 @@
+diff --git a/pylxd/client.py b/pylxd/client.py
+index f8eafda..1bf44d7 100644
+--- a/pylxd/client.py
++++ b/pylxd/client.py
+@@ -1,9 +1,11 @@
+ import json
+ import httplib
++import logging
+ 
+ import constants
+ import unixsock
+ 
++LOG = logging.getLogger(__name__)
+ 
+ class Client(object):
+     def __init__(self):
+@@ -48,17 +50,7 @@ class Client(object):
+         return container_exists
+ 
+     def running(self, name):
+-        container_running = False
+-        (status, data) = self._make_request('GET',
+-                                            '/1.0/containers/%s' % name)
+-        if status != 200:
+-            print "Unable to determine if %s is running" % name
+-            raise
+-
+-        metadata = data['metadata']
+-        if metadata['status'] == 'RUNNING':
+-            container_running = True
+-        return container_running
++        return self.state(name) == 'RUNNING'
+ 
+     def state(self, name):
+         (status, data) = self._make_request('GET',
+@@ -113,18 +105,43 @@ class Client(object):
+             raise
+ 
+     # container operations
++    def create(self, name, config=None):
++        if config is None:
++            image_id = self.list_aliases().pop()
++            LOG.info('image_id: %s' % image_id)
++            config = self.generate_config(name, image_id, profile='ubuntu')
++            LOG.info('config: %s' % config)
++
++        try:
++            (status, resp) = self.container_init(config)
++            LOG.info(('!!! %s') % resp)
++            if resp.get('status') == 'error':
++                raise Exception
++        except Exception as e:
++            LOG.debug(('Failed to create profile: %s')
++                         % resp.get('metadata'))
++            msg = ('Cannot create container: {0}')
++            raise Exception(msg.format(e),
++                                          instance_id=name)
++
++        return (status, resp)
++
++    def container_init(self, config):
++        (status, data) = self._make_request('POST', '/1.0/containers',
++                                            json.dumps(config))
++
++        return (status, data)
++
+     def update_container(self, name, config):
+-        container_update = False
+-        (state, data) = self._make_request('PUT', '/1.0/containers/%s' % name, json.dumps(action))
+-        if state == 200:
+-            container_update = True
+-        return container_update
++        (status, data) = self._make_request('PUT', '/1.0/containers/%s' % name,
++                                            json.dumps(config))
++        return (status, data)
+ 
+     def start(self, name):
+         container_start = False
+         action = {'action': 'start', 'force': True}
+         (state, data) = self._make_request('PUT', '/1.0/containers/%s/state' % name, json.dumps(action))
+-        if state == 200:
++        if state == 200 or (state == 202 and data['status_code'] == 100):
+             container_start = True
+         return container_start
+ 
+@@ -132,7 +149,7 @@ class Client(object):
+         container_stop = False
+         action = {'action': 'stop', 'force': True}
+         (state, data) = self._make_request('PUT', '/1.0/containers/%s/state' % name, json.dumps(action))
+-        if state == 200:
++        if state == 200 or (state == 202 and data['status_code'] == 100):
+             container_stop = True
+         return container_stop
+ 
+@@ -153,7 +170,22 @@ class Client(object):
+         return container_unpause
+ 
+     def destroy(self, name):
+-        (state, data) = self._make_request('DELETE', '/1.0/containers/%s' % name)
+-        if state != 200:
++        (status, data) = self._make_request('DELETE', '/1.0/containers/%s' % name)
++        if status != 202:
+             print "Failed to delete: %s" % name
+-            raise
+\ No newline at end of file
++            raise
++
++    def generate_config(self, instance_uuid, image_uuid, profile='ubuntu'):
++        config = { 'name': instance_uuid,
++                   'architecture':  'x86_64',
++                   'ephemeral': True,
++                   'hostname': instance_uuid,
++                   'profiles': profile,
++        }
++        config['source'] = {'type': 'image',
++                            'alias': image_uuid}
++
++        print json.dumps(config, indent=2)
++        return config
++
++

@@ -1,0 +1,15 @@
+#!/usr/bin/python2
+import sys
+import os
+import json
+import time
+
+sys.path.insert(0, '/home/rharper/work/git/pylxd/pylxd')
+import client
+
+name = sys.argv[1]
+rootfs = os.path.join('/var/lib/lxd/lxc', name, 'rootfs')
+c = client.Client()
+
+state = c.state(name)
+print state

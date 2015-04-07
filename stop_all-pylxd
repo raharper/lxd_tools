@@ -1,0 +1,29 @@
+#!/usr/bin/python2
+
+import sys
+import subprocess
+import time
+
+sys.path.insert(0, '/home/rharper/work/git/pylxd/pylxd')
+import client
+
+LXD = '/var/lib/lxd/lxc'
+c = client.Client()
+
+def stop_all(cl):
+    print 'Stopping All Containers'
+    for n in cl.list():
+        cl.stop(n)
+
+# stop em all
+while True:
+    still_running = [x for x in c.list() if c.running(x) is True]
+    if len(still_running) > 0:
+        print 'waiting on %d containers to stop' % len(still_running)
+        stop_all(c)
+        time.sleep(1)
+    else:
+        print 'All stopped'
+        break
+
+sys.exit(0)

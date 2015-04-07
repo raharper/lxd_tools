@@ -1,0 +1,79 @@
+#!/bin/bash -e
+#
+# usage:
+# clone <name> <path to rootfs to be cloned, relative to /var/lib/lxd/lxc> <snapshot type>
+#
+
+
+NAME=${1:-$(uuidgen)}
+IMAGE=${2:-vivid}
+TYPE=${3:-'btrfs'}
+
+LXDHOME=/var/lib/lxd/lxc
+SUBVOL_SOURCE=${LXDHOME}/${IMAGE}
+CONTAINER=${LXDHOME}/${NAME}
+CONFIG=${CONTAINER}/config
+SNAPSHOT=${CONTAINER}/rootfs
+BR=br-${NAME}
+UBUNTU_RELEASE=$(lsb_release -c -s)
+
+mkdir -p ${CONTAINER}
+case $TYPE in
+   btrfs)
+        if ! lsmod | grep -q $TYPE; then sudo modprobe $TYPE; fi
+        # subvolume snapshot vivid adc76f6a-a41f-4d13-ac59-ebb54e305c49/rootfs
+        sudo btrfs subvolume snapshot ${SUBVOL_SOURCE} ${SNAPSHOT}
+    ;;
+   overlay*)
+        mkdir -p ${CONTAINER}/{upper,work,rootfs}
+        LOWER=${SUBVOL_SOURCE}
+        UPPER=${CONTAINER}/upper
+        WORK=${CONTAINER}/work
+        TARGET=${SNAPSHOT}
+
+        case $UBUNTU_RELEASE in
+            precise|trusty)  # precise/trusty use overlayfs (older)
+                FS=overlayfs
+                OPTS="-olowerdir=$LOWER,upperdir=$UPPER"
+                ;;
+            vivid)   # vivid has newer kernel with overlay (requires workdir)
+                FS=overlay
+                OPTS="-olowerdir=$LOWER,upperdir=$UPPER,workdir=$WORK"
+                ;;
+            *)
+                echo "Unknown ubuntu release: $UBUNTU_RELEASE";
+                exit 1;
+             ;;
+        esac
+        if ! lsmod | grep -q overlay; then sudo modprobe $FS; fi
+        sudo mount -t $FS $FS $OPTS ${TARGET}
+        ;;
+    *)
+        echo "Unsupported clone type: $TYPE"
+        exit 1
+esac
+sudo cgm create all ${NAME}
+sudo cgm chown all ${NAME} 1000 1000
+
+# create a bridge for this container
+#sudo brctl addbr ${BR}
+#sudo brctl setfd ${BR} 0
+#sudo brctl stp ${BR} off
+#echo "0" | sudo tee /sys/class/net/${BR}/bridge/multicast_snooping
+#
+#cat > $CONFIG << EOF
+#lxc.include = /usr/share/lxc/config/ubuntu-cloud.common.conf
+#lxc.include = /usr/share/lxc/config/ubuntu-cloud.userns.conf
+#lxc.utsname = ${NAME}
+#lxc.rootfs = ${SNAPSHOT}
+#lxc.id_map = u 0 100000 65536
+#lxc.id_map = g 0 100000 65536
+#lxc.logfile = /var/lib/lxd/lxc/${NAME}/container.logfile
+#lxc.console = /var/lib/lxd/lxc/${NAME}/container.console
+#lxc.loglevel = 0
+#lxc.tty = 1
+#lxc.network.type = veth
+#lxc.network.link = ${BR}
+#lxc.network.flags = up
+#lxc.network.hwaddr = 00:16:3e:xx:xx:xx
+#EOF

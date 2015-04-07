@@ -1,0 +1,34 @@
+#!/bin/bash
+
+NAME=${1}
+[ -z ${NAME} ] && {
+    echo "usage: $0 <container name>"
+    exit 1;
+}
+
+LXDHOME=/var/lib/lxd/lxc
+CMDHOME=`pwd`
+API=${CMDHOME}/api
+CONTAINER=${LXDHOME}/${NAME}
+SNAPSHOT=${CONTAINER}/rootfs
+BR=br-${NAME}
+
+#STATE="`${LXDHOME}/state ${NAME}`"
+#if [ ${STATE} == "RUNNING" ]; then
+#        lxc stop ${NAME}
+#fi
+
+# remove bridge
+#sudo brctl delbr ${BR}
+
+# remove snapshot
+while [ -e "${CONTAINER}" ]; do
+    sudo umount ${SNAPSHOT} |:
+    # remove container
+    [ "${CONTAINER}" != "/" ] && { sudo rm -rf ${CONTAINER}; }
+    sleep 0.1
+done
+# remove from db:
+$API DELETE /1.0/containers/${NAME} &>/dev/null
+
+echo "Deleted ${NAME}"

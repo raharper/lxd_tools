@@ -1,0 +1,20 @@
+#!/bin/bash -x
+LXDHOME=/var/lib/lxd/lxc
+SUBVOL_SOURCE=${LXDHOME}/vivid
+CLONE=${LXDHOME}/clone
+DELETE=${LXDHOME}/delete
+STATE=${LXDHOME}/state
+# number of containers to clone
+NAME=${1:-$(uuidgen)}
+IMAGE=${2:-cirros}
+echo "Cloning ${NAME}"
+$CLONE ${NAME} ${IMAGE}
+echo "Starting ${NAME}"
+lxc start ${NAME} || exit 1
+s="`$STATE ${NAME}`"
+while [ "${s}" != "RUNNING" ]; do
+    sleep 1
+    s="`$STATE ${NAME}`"
+done
+lxc exec ${NAME} cat /etc/issue
+lxc exec ${NAME} uptime
