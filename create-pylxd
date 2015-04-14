@@ -17,12 +17,16 @@ rootfs = os.path.join('/var/lib/lxd/lxc', name, 'rootfs')
 c = client.Client()
 
 
+console_log = os.path.join('/var/lib/lxd/lxc', name, 'console.log')
 config = {
    'name': name,
    'architecture': 'x86_64',
    'ephemeral': True,
    'hostname': name,
    'profiles': ['default'],
+   'config': {
+        'raw.lxc': 'lxc.console.logfile=%s\n' % console_log,
+   },
    'source': {
         'type': 'none',
         'path': rootfs,
