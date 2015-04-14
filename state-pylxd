@@ -4,7 +4,8 @@ import os
 import json
 import time
 
-sys.path.insert(0, '/home/rharper/work/git/pylxd/pylxd')
+pylxd_path = os.path.join(os.getcwd(), 'pylxd/pylxd')
+sys.path.insert(0, pylxd_path)
 import client
 
 name = sys.argv[1]
