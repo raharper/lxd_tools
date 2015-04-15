@@ -49,15 +49,15 @@ The current limit for breaking lxd is here:
 That usually will wedge things.  While this is running, it's also useful to 
 spin up a few watches, like:
 
-    watch -d 0.5 ./api GET /1.0/containers
+    watch -n 0.5 ./api GET /1.0/containers
 
 and
 
-    watch -d 0.5 lxc list
+    watch -n 0.5 lxc list
 
 and
 
-    watch -d 0.5 grep -c overlay /proc/mounts
+    watch -n 0.5 grep -c overlay /proc/mounts
 
 
 Cleanup
