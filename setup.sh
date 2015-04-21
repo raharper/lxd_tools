@@ -14,11 +14,15 @@ if ! screen -ls socat | grep -q socat; then
 fi
 
 # import trusty image
-lxd-images import lxc ubuntu trusty amd64 --alias ubuntu-trusty
+if ! lxc image list | grep -q ubuntu-trusty; then
+    lxd-images import lxc ubuntu trusty amd64 --alias ubuntu-trusty
+fi
 
 # launch and stop it; we want the instantiated rootfs
-lxc launch ubuntu-trusty trusty-template
-lxc stop --force trusty-template 
+if ! lxc list | grep -q trusty-template; then
+   lxc launch ubuntu-trusty trusty-template
+   lxc stop --force trusty-template 
+fi
 
 echo 
 echo "Now run:"

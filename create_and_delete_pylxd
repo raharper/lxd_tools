@@ -1,10 +1,11 @@
-#!/bin/bash
+#!/bin/bash -e
 
 NAME=${1:-$(uuidgen)}
 IMAGE=${2:-trusty-template/rootfs}
+LOG=/tmp/${NAME}_lxd.log
 
 function log {
-    echo "`date -u +%s.%N` $@"
+    echo "`date -u +%s.%N` $@" | tee -a $LOG
 }
 
 LXDHOME=/var/lib/lxd/lxc
@@ -25,10 +26,15 @@ lxc exec ${NAME} uptime
 log "Stopping ${NAME}"
 lxc stop --force ${NAME}
 s="`$STATE ${NAME}`"
-while [ "${s}" != "STOPPED" ]; do
+while true; do
+    if [ "${s}" != "STOPPED" -o "${s}" != "None" ]; then
+       log "state is stopped or dead ($s)"
+       break 
+    fi 
     echo -n "."
     sleep 1
     s="`$STATE ${NAME}`"
+    log "state=${s}"
 done
 echo -e "\n"
 log "${NAME} STOPPED"

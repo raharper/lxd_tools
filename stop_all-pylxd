@@ -3,8 +3,10 @@
 import sys
 import subprocess
 import time
+import os
 
-sys.path.insert(0, '/home/rharper/work/git/pylxd/pylxd')
+pylxd_path = os.path.join(os.getcwd(), 'pylxd/pylxd')
+sys.path.insert(0, pylxd_path)
 import client
 
 LXD = '/var/lib/lxd/lxc'
