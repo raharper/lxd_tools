@@ -34,13 +34,31 @@ config = {
 }
 
 print('%s: %s container_init() ->' %(date(), name))
-(s, d) = c.container_init(config)
+try:
+    (resp, data) = c.container_init(config)
+except Exception as e:
+    print(('Failed to create profile: %s') % data.get('metadata'))
+    msg = ('Cannot create container: {0}')
+    raise Exception(msg.format(e), instance_id=name)
+
+if resp not in [200, 202]:
+    print 'Failed to init container!'
+    sys.exit(1)
+
+if resp == 202 and data['status_code'] != 100:
+    print 'Failed to init container!'
+    sys.exit(1)
+
 print('%s: %s container_init() <-' %(date(), name))
 print('%s: %s c.start() ->' %(date(), name))
 c.start(name)
-while c.running(name) is False:
-    print('%s: %s not running, calling c.start() ->'
-            %(date(), name))
+for _ in range(0, 10):
+    if c.running(name) == True:
+        print('%s: %s state=running' %(date(), name))
+        sys.exit(0)
+    print('%s: %s not running, calling c.start() ->' %(date(), name))
     c.start(name)
-    time.sleep(0.5)
-print('%s: %s state=running' %(date(), name))
+    time.sleep(0.25)
+
+print 'Failed to start container: %s' % name
+sys.exit(1)

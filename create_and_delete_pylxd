@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+export PATH=/home/rharper/go/bin:$PATH
+which lxc
 NAME=${1:-$(uuidgen)}
 IMAGE=${2:-trusty-template/rootfs}
 LOG=/tmp/${NAME}_lxd.log
@@ -18,8 +20,8 @@ STATE=${CMDHOME}/state-pylxd
 log "Cloning ${NAME}"
 $CLONE ${NAME} ${IMAGE} overlayfs
 log "Starting ${NAME}"
-# CREATE blocks until start
-${CREATE} ${NAME} || exit 1
+# CREATE blocks until start, but can fail
+${CREATE} ${NAME} || { $DELETE $NAME; exit 1; }
 log "Running 2 commands"
 lxc exec ${NAME} cat /etc/issue
 lxc exec ${NAME} uptime
