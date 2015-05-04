@@ -23,8 +23,8 @@ log "Starting ${NAME}"
 # CREATE blocks until start, but can fail
 ${CREATE} ${NAME} || { $DELETE $NAME; exit 1; }
 log "Running 2 commands"
-lxc exec ${NAME} cat /etc/issue
-lxc exec ${NAME} uptime
+lxc exec ${NAME} -- uname -a
+lxc exec ${NAME} -- uptime
 log "Stopping ${NAME}"
 lxc stop --force ${NAME}
 s="`$STATE ${NAME}`"

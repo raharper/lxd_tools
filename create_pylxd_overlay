@@ -15,4 +15,3 @@ echo "Starting ${NAME}"
 # CREATE blocks until start
 ${CREATE} ${NAME} || exit 1
 lxc exec ${NAME} cat /etc/issue
-lxc exec ${NAME} uptime

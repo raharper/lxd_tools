@@ -56,11 +56,11 @@ sudo cgm create all ${NAME}
 sudo cgm chown all ${NAME} 1000 1000
 
 # create a bridge for this container
-#sudo brctl addbr ${BR}
-#sudo brctl setfd ${BR} 0
-#sudo brctl stp ${BR} off
-#echo "0" | sudo tee /sys/class/net/${BR}/bridge/multicast_snooping
-#
+sudo brctl addbr ${BR}
+sudo brctl setfd ${BR} 0
+sudo brctl stp ${BR} off
+echo "0" | sudo tee /sys/class/net/${BR}/bridge/multicast_snooping
+
 #cat > $CONFIG << EOF
 #lxc.include = /usr/share/lxc/config/ubuntu-cloud.common.conf
 #lxc.include = /usr/share/lxc/config/ubuntu-cloud.userns.conf

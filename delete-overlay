@@ -19,7 +19,7 @@ BR=br-${NAME}
 #fi
 
 # remove bridge
-#sudo brctl delbr ${BR}
+sudo brctl delbr ${BR}
 
 # remove snapshot
 while [ -e "${CONTAINER}" ]; do
@@ -32,3 +32,4 @@ done
 $API DELETE /1.0/containers/${NAME} &>/dev/null
 
 echo "Deleted ${NAME}"
+echo "Remaining overlay: `grep -c overlay /proc/mounts`"

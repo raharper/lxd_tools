@@ -13,6 +13,7 @@ sys.path.insert(0, pylxd_path)
 import client
 
 name = sys.argv[1]
+bridge = "br-%s" % name
 rootfs = os.path.join('/var/lib/lxd/lxc', name, 'rootfs')
 c = client.Client()
 
@@ -25,7 +26,7 @@ config = {
    'hostname': name,
    'profiles': ['default'],
    'config': {
-        'raw.lxc': 'lxc.console.logfile=%s\n' % console_log,
+        'raw.lxc': 'lxc.console.logfile=%s\nlxc.network.link=%s\n' % (console_log, bridge),
    },
    'source': {
         'type': 'none',
