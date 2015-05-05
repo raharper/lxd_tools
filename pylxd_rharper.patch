@@ -1,5 +1,5 @@
 diff --git a/pylxd/client.py b/pylxd/client.py
-index f8eafda..1bf44d7 100644
+index f8eafda..1a055f3 100644
 --- a/pylxd/client.py
 +++ b/pylxd/client.py
 @@ -1,9 +1,11 @@
@@ -33,7 +33,7 @@ index f8eafda..1bf44d7 100644
  
      def state(self, name):
          (status, data) = self._make_request('GET',
-@@ -113,18 +105,43 @@ class Client(object):
+@@ -113,26 +105,58 @@ class Client(object):
              raise
  
      # container operations
@@ -79,11 +79,19 @@ index f8eafda..1bf44d7 100644
          action = {'action': 'start', 'force': True}
          (state, data) = self._make_request('PUT', '/1.0/containers/%s/state' % name, json.dumps(action))
 -        if state == 200:
+-            container_start = True
++        print(state, data)
 +        if state == 200 or (state == 202 and data['status_code'] == 100):
-             container_start = True
++            # {u'status': u'OK', u'status_code': 100, u'operation': # u'/1.0/operations/b67756d3-c14a-4ddd-87d3-dfedc55356b6
++            op = data['operation']
++            print('waiting on op: %s' % op)
++            (state, data) = self._make_request('GET' , '%s/wait' % op)
++            print(state, data)
++            if state == 200 or (state == 202 and data['status_code'] == 100):
++                container_start = True
          return container_start
  
-@@ -132,7 +149,7 @@ class Client(object):
+     def stop(self, name):
          container_stop = False
          action = {'action': 'stop', 'force': True}
          (state, data) = self._make_request('PUT', '/1.0/containers/%s/state' % name, json.dumps(action))
@@ -92,7 +100,7 @@ index f8eafda..1bf44d7 100644
              container_stop = True
          return container_stop
  
-@@ -153,7 +170,22 @@ class Client(object):
+@@ -153,7 +177,22 @@ class Client(object):
          return container_unpause
  
      def destroy(self, name):
