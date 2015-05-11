@@ -5,7 +5,7 @@ case `uname -m` in
 esac
 RELEASE=${1:-'vivid'}
 
-sudo apt-get install -y git socat parallel
+sudo apt-get install -y git screen socat parallel
 
 # get pylxd and apply my patch
 [ ! -d "pylxd" ] && {
