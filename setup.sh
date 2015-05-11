@@ -1,5 +1,6 @@
 #!/bin/bash -x
 case `uname -m` in
+  aarch64)  ARCH='arm64';;
   ppc64le)  ARCH='ppc64el';;
   *) ARCH=`uname -m`;;
 esac
