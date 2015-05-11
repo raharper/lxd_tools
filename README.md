@@ -1,8 +1,8 @@
 Getting Started
 ---------------
 
-1. Install lxd and chech that it's working by following the getting started
-guid.
+1. Install lxd and check that it's working by following the getting started
+guide.
 2. run ./setup.sh from in tree to prep host for testing
 
 Tests
